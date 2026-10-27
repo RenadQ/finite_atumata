@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PacMaze Academic Parse Tree</title>
+
+  <!-- PacMan favicon -->
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAA..." />
+  <style>
+    body {
+      background-color: #001f3f;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    
+    h1, h2 {
+      color: #ffeb3b;
+      margin: 10px 0;
+    }
+    
+    textarea {
+      width: 90%;
+      height: 100px;
+      background-color: #011627;
+      color: #00e5ff;
+      border: 2px solid #00e5ff;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 10px auto;
+      font-family: monospace;
+      display: block;
+    }
+    
+    button {
+      padding: 10px 20px;
+      background-color: #ffeb3b;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #001f3f;
+      cursor: pointer;
+      margin: 10px;
+      font-size: 16px;
+    }
+    
+    #acceptanceMessage {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px;
+    }
+    
+    #treeContainer {
+      margin-top: 20px;
+      background-color: #011627;
+      border-radius: 10px;
+      padding: 10px;
+      height: 800px;
+      overflow: auto;
+    }
+    
+    /* RECTANGLES (Nodes) */
+    .node rect {
+      fill: #ffeb3b;
+      stroke: #00e5ff;
+      stroke-width: 2px;
+      rx: 10;
+      ry: 10;
+    }
+    
+    /* TEXT inside nodes */
+    .node text {
+      font: 14px monospace;
+      fill: #000000; /* Pure black inside yellow node */
+      font-weight: bold;
+    }
+    
+    /* LINES (Links between nodes) */
+    .link {
+      fill: none;
+      stroke: #66ccff; /* Light blue lines */
+      stroke-width: 2px;
+    }
+    
+    .mode-switch {
+      margin: 10px;
+    }
+    
+    /* Dropdown Renad Alkahtani Button */
+    .dropdown {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 5000;
+    }
+    
+    .dropbtn {
+      background-color: #ffeb3b;
+      color: #001f3f;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 10px #ffeb3b;
+      animation: sparkle 1.5s infinite alternate;
+    }
+    
+    @keyframes sparkle {
+      from { box-shadow: 0 0 10px #ffeb3b; }
+      to { box-shadow: 0 0 20px #ffeb3b, 0 0 30px #ffeb3b; }
+    }
+    
+    /* Dropdown Content */
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #011627;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px #00e5ff;
+      border-radius: 8px;
+      z-index: 5001;
+      right: 0;
+    }
+    
+    .dropdown-content a {
+      color: #66ccff; /* Light blue links */
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      font-weight: bold;
+    }
+    
+    .dropdown-content a:hover {
+      background-color: #003366;
+    }
+    
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    
+    /* SIMPLE Toggle Chase Button */
+    #toggleChaseButton {
+      background-color: #00e5ff; /* light blue */
+      color: #001f3f;             /* dark navy text */
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 14px;
+      z-index: 6000;
+      transition: background-color 0.3s ease;
+    }
+    
+    #toggleChaseButton:hover {
+      background-color: #66ccff; /* lighter blue on hover */
+    }
+    </style>
+    
+  <!-- 
+  <style>
+    body {
+      background-color: #001f3f;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    h1, h2 {
+      color: #ffeb3b;
+      margin: 10px 0;
+    }
+    textarea {
+      width: 90%;
+      height: 100px;
+      background-color: #011627;
+      color: #00e5ff;
+      border: 2px solid #00e5ff;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 10px auto;
+      font-family: monospace;
+      display: block;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #ffeb3b;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #001f3f;
+      cursor: pointer;
+      margin: 10px;
+      font-size: 16px;
+    }
+    #acceptanceMessage {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px;
+    }
+    #treeContainer {
+      margin-top: 20px;
+      background-color: #011627;
+      border-radius: 10px;
+      padding: 10px;
+      height: 800px;
+      overflow: auto;
+    }
+    .node rect {
+      fill: #ffeb3b;
+      stroke: #00e5ff;
+      stroke-width: 2px;
+      rx: 10;
+      ry: 10;
+    }
+    .node text {
+      font: 14px monospace;
+      fill: #000000;   /* Pure black inside yellow node */
+      font-weight: bold;
+    }
+    .mode-switch {
+      margin: 10px;
+    }
+    .dropdown {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 5000;
+    }
+    .dropbtn {
+      background-color: #ffeb3b;
+      color: #001f3f;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 10px #ffeb3b;
+      animation: sparkle 1.5s infinite alternate;
+    }
+    #toggleChaseButton {
+  background-color: #ffeb3b;
+  color: #001f3f;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: bold;
+  box-shadow: 0 0 8px #ffeb3b;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 6000;
+}
+
+    @keyframes sparkle {
+      from { box-shadow: 0 0 10px #ffeb3b; }
+      to { box-shadow: 0 0 20px #ffeb3b, 0 0 30px #ffeb3b; }
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #011627;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px #00e5ff;
+      border-radius: 8px;
+      z-index: 5001;
+      right: 0;
+    }
+    .dropdown-content a {
+      color: #00e5ff;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      font-weight: bold;
+    }
+    .dropdown-content a:hover {
+      background-color: #003366;
+    }
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+  </style> -->
+  
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#001f3f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
+      <img src="pacman.png" width="100" height="100" alt="Loading PacMan">
+      <h2 style="color:#ffeb3b;">Loading...</h2>
+    </div>
+    
+    <!-- Top Right Dropdown -->
+    <div class="dropdown">
+      <button class="dropbtn">🌟 Renad AlKahtani</button>
+      <div class="dropdown-content">
+        <a href="https://twitter.com/RenadQahtani11" target="_blank">🐦 Twitter</a>
+        <a href="https://github.com/RenadQ" target="_blank">🐙 GitHub</a>
+        <a href="https://linkedin.com/in/renad-al-kahtani-7a70a8250/" target="_blank">💼 LinkedIn</a>
+      </div>
+    </div>
+    <!-- Toggle Button for Chase Animation -->
+<button id="toggleChaseButton" onclick="toggleChase()">👻 Toggle Chase</button>
+
+    <h1>PacMaze Academic Parse Tree</h1>
+    
+    <div class="mode-switch">
+      <input type="radio" name="mode" value="grammar" checked> Grammar Parse Tree
+      <input type="radio" name="mode" value="string"> Test String Parse Tree
+    </div>
+    
+    <h2>Grammar Rules:</h2>
+    <textarea id="grammar" placeholder="Paste your grammar here..."></textarea>
+    
+    <h2>Test String:</h2>
+    <textarea id="testString" placeholder="Type your test string here..."></textarea>
+    
+    <button onclick="generateTree()">Simulate Parse Tree</button>
+    
+    <div id="acceptanceMessage"></div>
+    <div id="treeContainer"></div>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
+
+    <script>
+//         function cleanGrammar(text) {
+//           return text
+//             .replace(/\/\/.*$/gm, '')     // Remove single-line comments
+//             .replace(/\/\*.*?\*\//gs, 'ε')  // Replace multi-line comments with epsilon
+//             .replace(/;/g, '')
+//             .trim();
+//         }
+        
+//         function parseGrammar(grammarText) {
+//           const rules = {};
+//           grammarText.split('\n').forEach(line => {
+//             if (line.includes(':')) {
+//               const [left, right] = line.split(':');
+//               rules[left.trim()] = right.trim().split('|').map(opt => opt.trim().split(/\s+/));
+//             }
+//           });
+//           return rules;
+//         }
+        
+//         function parseInput(inputText) {
+//           return inputText.trim().split(/\s+/);
+//         }
+      
+//         // function tryParse(symbol, tokens, rules) {
+//         //   if (symbol === 'ε') {
+//         //     return { node: { name: 'ε', children: [] }, tokens };
+//         //   }
+//         //   if (!rules[symbol]) {
+//         //     if (tokens.length > 0 && (tokens[0] === symbol || /^\w+$/.test(tokens[0]))) {
+//         //       return { node: { name: `${symbol} (${tokens[0]})`, children: [] }, tokens: tokens.slice(1) };
+//         //     }
+//         //     return null;
+//         //   }
+//         function tryParse(symbol, tokens, rules) {
+//         if (symbol === 'epsilon' || symbol === 'ε') {
+//         return { node: { name: 'ε', children: [] }, tokens };
+//       }
+
+//   if (!rules[symbol]) {
+//     if (tokens.length > 0 && (tokens[0] === symbol || /^\w+$/.test(tokens[0]))) {
+//       return { node: { name: `${symbol} (${tokens[0]})`, children: [] }, tokens: tokens.slice(1) };
+//     }
+//     return null;
+//   }
+
+//   for (let option of rules[symbol]) {
+//     let remainingTokens = [...tokens];
+//     let children = [];
+//     let matched = true;
+
+//     for (let part of option) {
+//       const result = tryParse(part, remainingTokens, rules);
+//       if (result) {
+//         children.push(result.node);
+//         remainingTokens = result.tokens;
+//       } else {
+//         matched = false;
+//         break;
+//       }
+//     }
+
+//     if (matched) {
+//       return { node: { name: symbol, children }, tokens: remainingTokens };
+//     }
+//     // Else try next option
+//   }
+//   return null;
+// }
+
+//           for (let option of rules[symbol]) {
+//             let remaining = [...tokens];
+//             let children = [];
+//             let matched = true;
+//             for (let part of option) {
+//               const result = tryParse(part, remaining, rules);
+//               if (result) {
+//                 children.push(result.node);
+//                 remaining = result.tokens;
+//               } else {
+//                 matched = false;
+//                 break;
+//               }
+//             }
+//             if (matched) {
+//               return { node: { name: symbol, children }, tokens: remaining };
+//             }
+//           }
+//           return null;
+//         }
+        
+//         function buildTokenTree(tokens) {
+//           return {
+//             name: "Tokens",
+//             children: tokens.map(token => ({ name: token, children: [] }))
+//           };
+//         }
+        
+//         function buildGrammarTree(rules) {
+//           function buildNode(symbol, visited = new Set()) {
+//             if (visited.has(symbol)) return { name: symbol, children: [] };
+//             visited.add(symbol);
+//             if (!rules[symbol]) return { name: symbol, children: [] };
+//             return {
+//               name: symbol,
+//               children: rules[symbol].map(opt => ({
+//                 name: '|',
+//                 children: opt.map(part => buildNode(part, new Set(visited)))
+//               }))
+//             };
+//           }
+//           const startSymbol = Object.keys(rules)[0];
+//           return buildNode(startSymbol);
+//         }
+        
+//         function drawTree(treeData) {
+//           document.getElementById('treeContainer').innerHTML = '';
+//           const svg = d3.select('#treeContainer').append('svg')
+//             .attr('width', 2000)
+//             .attr('height', 1000)
+//             .call(d3.zoom().on('zoom', (event) => {
+//               svg.attr('transform', event.transform);
+//             }))
+//             .append('g')
+//             .attr('transform', 'translate(1000,50)');
+        
+//         //   const treeLayout = d3.tree().nodeSize([60, 100]);
+//           const treeLayout = d3.tree().nodeSize([120, 200]);
+
+//           const root = d3.hierarchy(treeData);
+//           treeLayout(root);
+        
+//           svg.selectAll('.link')
+//             .data(root.links())
+//             .join('path')
+//             .attr('class', 'link')
+//             .attr('d', d3.linkVertical().x(d => d.x).y(d => d.y));
+        
+//           const node = svg.selectAll('.node')
+//             .data(root.descendants())
+//             .join('g')
+//             .attr('class', 'node')
+//             .attr('transform', d => `translate(${d.x},${d.y})`);
+        
+//           node.append('rect')
+//             .attr('width', 100)
+//             .attr('height', 24)
+//             .attr('x', -50)
+//             .attr('y', -12)
+//             .attr('rx', 8)
+//             .attr('ry', 8);
+        
+//           node.append('text')
+//             .attr('dy', 4)
+//             .attr('text-anchor', 'middle')
+//             .text(d => d.data.name);
+//         }
+       
+// function generateTree() {
+//     const grammarRaw = document.getElementById('grammar').value.trim();
+//     const grammarText = cleanGrammar(grammarRaw);
+//     const inputText = document.getElementById('testString').value.trim();
+//     const mode = document.querySelector('input[name="mode"]:checked').value;
+  
+//     if (!grammarText) {
+//       alert('Please provide grammar rules.');
+//       return;
+//     }
+//     const rules = parseGrammar(grammarText);
+//     document.getElementById('acceptanceMessage').innerText = '';
+  
+//     if (mode === 'grammar') {
+//       const grammarTree = buildGrammarTree(rules);
+//       drawTree(grammarTree);
+//       document.getElementById('acceptanceMessage').innerHTML = '<span style="color:lightgreen;">(Grammar Mode)</span>';
+//     } else {
+//       if (!inputText) {
+//         alert('Please provide a test string.');
+//         return;
+//       }
+//       const tokens = parseInput(inputText);
+//       const startSymbol = Object.keys(rules)[0];
+//       const result = tryParse(startSymbol, tokens, rules);
+//       if (result && result.tokens.length === 0) {
+//         drawTree(result.node);
+//         document.getElementById('acceptanceMessage').innerHTML = '<span style="color:lightgreen;">ACCEPTED ✅</span>';
+//       } else {
+//         drawTree(buildTokenTree(tokens));
+//         document.getElementById('acceptanceMessage').innerHTML = '<span style="color:red;">NOT ACCEPTED ❌</span>';
+//       }
+//     }
+//   }
+  
+//   // Hide loading screen once everything loaded
+//   window.onload = function() {
+//     document.getElementById('loadingScreen').style.display = 'none';
+//     startPacManAnimation();
+//   };
+  
+//   function startPacManAnimation() {
+//     const body = document.body;
+  
+//     const pacman = document.createElement('img');
+//     pacman.src = 'pacman.png';
+//     pacman.style.position = 'fixed';
+//     pacman.style.top = '50px';
+//     pacman.style.left = '50px';
+//     pacman.style.width = '50px';
+//     pacman.style.zIndex = '5000';
+//     body.appendChild(pacman);
+  
+//     const ghost1 = document.createElement('img');
+//     ghost1.src = 'ghost.png';
+//     ghost1.style.position = 'fixed';
+//     ghost1.style.top = '80px';
+//     ghost1.style.left = '20px';
+//     ghost1.style.width = '50px';
+//     ghost1.style.zIndex = '5000';
+//     body.appendChild(ghost1);
+  
+//     const ghost2 = document.createElement('img');
+//     ghost2.src = 'PinkyGhost.png';
+//     ghost2.style.position = 'fixed';
+//     ghost2.style.top = '110px';
+//     ghost2.style.left = '10px';
+//     ghost2.style.width = '50px';
+//     ghost2.style.zIndex = '5000';
+//     body.appendChild(ghost2);
+  
+//     let x = 0;
+//     let y = 0;
+//     let dirX = 2;
+//     let dirY = 1.5;
+  
+//     setInterval(() => {
+//       x += dirX;
+//       y += dirY;
+//       if (x > window.innerWidth - 60 || x < 0) dirX = -dirX;
+//       if (y > window.innerHeight - 60 || y < 0) dirY = -dirY;
+  
+//       pacman.style.left = x + 'px';
+//       pacman.style.top = y + 'px';
+//       ghost1.style.left = (x - 40) + 'px';
+//       ghost1.style.top = (y - 30) + 'px';
+//       ghost2.style.left = (x - 80) + 'px';
+//       ghost2.style.top = (y - 60) + 'px';
+//     }, 30);
+//   }
+
+//   // Global references for PacMan and Ghosts
+// let pacmanImg, ghost1Img, ghost2Img;
+
+// function startPacManAnimation() {
+//   const body = document.body;
+
+//   pacmanImg = document.createElement('img');
+//   pacmanImg.src = 'https://upload.wikimedia.org/wikipedia/commons/5/59/Pacman.gif';
+//   pacmanImg.style.position = 'fixed';
+//   pacmanImg.style.top = '50px';
+//   pacmanImg.style.left = '50px';
+//   pacmanImg.style.width = '50px';
+//   pacmanImg.style.zIndex = '5000';
+//   body.appendChild(pacmanImg);
+
+//   ghost1Img = document.createElement('img');
+//   ghost1Img.src = 'https://upload.wikimedia.org/wikipedia/commons/0/09/InkyGhost.png';
+//   ghost1Img.style.position = 'fixed';
+//   ghost1Img.style.top = '80px';
+//   ghost1Img.style.left = '20px';
+//   ghost1Img.style.width = '50px';
+//   ghost1Img.style.zIndex = '5000';
+//   body.appendChild(ghost1Img);
+
+//   ghost2Img = document.createElement('img');
+//   ghost2Img.src = 'https://upload.wikimedia.org/wikipedia/commons/5/5b/PinkyGhost.png';
+//   ghost2Img.style.position = 'fixed';
+//   ghost2Img.style.top = '110px';
+//   ghost2Img.style.left = '10px';
+//   ghost2Img.style.width = '50px';
+//   ghost2Img.style.zIndex = '5000';
+//   body.appendChild(ghost2Img);
+
+//   moveChase();
+// }
+
+// let chaseInterval;
+// function moveChase() {
+//   let x = 0;
+//   let y = 0;
+//   let dirX = 2;
+//   let dirY = 1.5;
+
+//   chaseInterval = setInterval(() => {
+//     x += dirX;
+//     y += dirY;
+//     if (x > window.innerWidth - 60 || x < 0) dirX = -dirX;
+//     if (y > window.innerHeight - 60 || y < 0) dirY = -dirY;
+
+//     if (pacmanImg && ghost1Img && ghost2Img) {
+//       pacmanImg.style.left = x + 'px';
+//       pacmanImg.style.top = y + 'px';
+//       ghost1Img.style.left = (x - 40) + 'px';
+//       ghost1Img.style.top = (y - 30) + 'px';
+//       ghost2Img.style.left = (x - 80) + 'px';
+//       ghost2Img.style.top = (y - 60) + 'px';
+//     }
+//   }, 30);
+// }
+
+// // Toggle Chase
+// let chaseVisible = true;
+// function toggleChase() {
+//   if (chaseVisible) {
+//     if (pacmanImg) pacmanImg.style.display = 'none';
+//     if (ghost1Img) ghost1Img.style.display = 'none';
+//     if (ghost2Img) ghost2Img.style.display = 'none';
+//     clearInterval(chaseInterval);
+//   } else {
+//     if (pacmanImg) pacmanImg.style.display = 'block';
+//     if (ghost1Img) ghost1Img.style.display = 'block';
+//     if (ghost2Img) ghost2Img.style.display = 'block';
+//     moveChase();
+//   }
+//   chaseVisible = !chaseVisible;
+// }
+// window.onload = function() {
+//   document.getElementById('loadingScreen').style.display = 'none';
+//   startPacManAnimation();
+// };
+
+// // Emergency timeout in case loading hangs
+// setTimeout(function() {
+//   const loading = document.getElementById('loadingScreen');
+//   if (loading && loading.style.display !== 'none') {
+//     loading.style.display = 'none';
+//     console.warn('Loading forcibly hidden after timeout.');
+//     startPacManAnimation(); // still start animation
+//   }
+// }, 5000);
+
+
+// تنظيف قواعد اللغة
+function cleanGrammar(text) {
+  return text
+    .replace(/\/\/.*$/gm, '')      // حذف التعليقات الأحادية
+    .replace(/\/\*.*?\*\//gs, 'ε') // استبدال التعليقات المتعددة بـ ε
+    .replace(/;/g, '')             // إزالة الفواصل المنقوطة
+    .trim();
+}
+
+// تحليل قواعد اللغة إلى كائن
+function parseGrammar(grammarText) {
+  const rules = {};
+  grammarText.split('\n').forEach(line => {
+    if (line.includes(':')) {
+      const [left, right] = line.split(':');
+      rules[left.trim()] = right.trim().split('|').map(opt => opt.trim().split(/\s+/));
+    }
+  });
+  return rules;
+}
+
+// تحليل السلسلة إلى رموز
+function parseInput(inputText) {
+  return inputText.trim().split(/\s+/);
+}
+
+// المحلل النحوي الأساسي
+function tryParse(symbol, tokens, rules) {
+  if (symbol === 'ε' || symbol === 'epsilon') {
+    return { node: { name: 'ε', children: [] }, tokens };
+  }
+
+  if (!(symbol in rules)) {
+    if (tokens.length > 0 && tokens[0] === symbol) {
+      return {
+        node: { name: `${symbol} (${tokens[0]})`, children: [] },
+        tokens: tokens.slice(1)
+      };
+    } else {
+      return null;
+    }
+  }
+
+  for (const option of rules[symbol]) {
+    let tempTokens = [...tokens];
+    let children = [];
+    let matched = true;
+
+    for (const part of option) {
+      const result = tryParse(part, tempTokens, rules);
+      if (result) {
+        children.push(result.node);
+        tempTokens = result.tokens;
+      } else {
+        matched = false;
+        break;
+      }
+    }
+
+    if (matched) {
+      return {
+        node: { name: symbol, children },
+        tokens: tempTokens
+      };
+    }
+  }
+
+  return null;
+}
+
+// بناء شجرة من الرموز فقط (عند الرفض)
+function buildTokenTree(tokens) {
+  return {
+    name: "Tokens",
+    children: tokens.map(token => ({ name: token, children: [] }))
+  };
+}
+
+// بناء شجرة القواعد في وضع "grammar"
+function buildGrammarTree(rules) {
+  function buildNode(symbol, visited = new Set()) {
+    if (visited.has(symbol)) return { name: symbol, children: [] };
+    visited.add(symbol);
+    if (!rules[symbol]) return { name: symbol, children: [] };
+    return {
+      name: symbol,
+      children: rules[symbol].map(opt => ({
+        name: '|',
+        children: opt.map(part => buildNode(part, new Set(visited)))
+      }))
+    };
+  }
+  const startSymbol = Object.keys(rules)[0];
+  return buildNode(startSymbol);
+}
+
+// رسم الشجرة باستخدام D3.js
+function drawTree(treeData) {
+  document.getElementById('treeContainer').innerHTML = '';
+  const svg = d3.select('#treeContainer').append('svg')
+    .attr('width', 2000)
+    .attr('height', 1000)
+    .call(d3.zoom().on('zoom', (event) => {
+      svg.attr('transform', event.transform);
+    }))
+    .append('g')
+    .attr('transform', 'translate(1000,50)');
+
+  const treeLayout = d3.tree().nodeSize([120, 200]);
+  const root = d3.hierarchy(treeData);
+  treeLayout(root);
+
+  svg.selectAll('.link')
+    .data(root.links())
+    .join('path')
+    .attr('class', 'link')
+    .attr('d', d3.linkVertical().x(d => d.x).y(d => d.y));
+
+  const node = svg.selectAll('.node')
+    .data(root.descendants())
+    .join('g')
+    .attr('class', 'node')
+    .attr('transform', d => `translate(${d.x},${d.y})`);
+
+  node.append('rect')
+    .attr('width', 100)
+    .attr('height', 24)
+    .attr('x', -50)
+    .attr('y', -12)
+    .attr('rx', 8)
+    .attr('ry', 8);
+
+  node.append('text')
+    .attr('dy', 4)
+    .attr('text-anchor', 'middle')
+    .text(d => d.data.name);
+}
+
+// الدالة الرئيسية للتنفيذ
+function generateTree() {
+  const grammarRaw = document.getElementById('grammar').value.trim();
+  const grammarText = cleanGrammar(grammarRaw);
+  const inputText = document.getElementById('testString').value.trim();
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+
+  if (!grammarText) {
+    alert('Please provide grammar rules.');
+    return;
+  }
+
+  const rules = parseGrammar(grammarText);
+  document.getElementById('acceptanceMessage').innerText = '';
+
+  if (mode === 'grammar') {
+    const grammarTree = buildGrammarTree(rules);
+    drawTree(grammarTree);
+    document.getElementById('acceptanceMessage').innerHTML = '<span style="color:lightgreen;">(Grammar Mode)</span>';
+  } else {
+    if (!inputText) {
+      alert('Please provide a test string.');
+      return;
+    }
+
+    const tokens = parseInput(inputText);
+    const startSymbol = Object.keys(rules)[0];
+    const result = tryParse(startSymbol, tokens, rules);
+
+    if (result && result.tokens.length === 0) {
+      drawTree(result.node);
+      document.getElementById('acceptanceMessage').innerHTML = '<span style="color:lightgreen;">ACCEPTED ✅</span>';
+    } else {
+      drawTree(buildTokenTree(tokens));
+      document.getElementById('acceptanceMessage').innerHTML = '<span style="color:red;">NOT ACCEPTED ❌</span>';
+    }
+  }
+}
+
+
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const loading = document.getElementById('loadingScreen');
+      if (loading) loading.style.display = 'none';
+    });
+    </script>
+    
+  </body>
+  </html>
+              
